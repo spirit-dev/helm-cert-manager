@@ -1,4 +1,4 @@
 **/*.tgz
 out*.yaml
 
-charts
+helm/charts
