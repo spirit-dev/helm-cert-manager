@@ -1,5 +1,7 @@
 # Welcome to cert-manager
 
+[![App Status](https://argocd-internal.spirit-dev.net/api/badge?name=cert-manager-turingpi&revision=true&showAppName=true)](https://argocd-internal.spirit-dev.net/applications/cert-manager-turingpi)
+
 ## Table of content
 
 - [Welcome to cert-manager](#welcome-to-cert-manager)
