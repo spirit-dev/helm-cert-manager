@@ -167,6 +167,19 @@ cert-manager:
   # This is helpful when installing cert manager as a chart dependency (sub chart).
   namespace: ""
 
+  # Override the "cert-manager.fullname" value. This value is used as part of
+  # most of the names of the resources created by this Helm chart.
+  # +docs:property
+  # fullnameOverride: "my-cert-manager"
+
+  # Override the "cert-manager.name" value, which is used to annotate some of
+  # the resources that are created by this Chart (using "app.kubernetes.io/name").
+  # NOTE: There are some inconsitencies in the Helm chart when it comes to
+  # these annotations (some resources use eg. "cainjector.name" which resolves
+  # to the value "cainjector").
+  # +docs:property
+  # nameOverride: "my-cert-manager"
+
   serviceAccount:
     # Specifies whether a service account should be created.
     create: true
@@ -196,8 +209,10 @@ cert-manager:
 
   # This property is used to configure options for the controller pod.
   # This allows setting options that would usually be provided using flags.
-  # An APIVersion and Kind must be specified in your values.yaml file.
-  # Flags will override options that are set here.
+  #
+  # If `apiVersion` and `kind` are unspecified they default to the current latest
+  # version (currently `controller.config.cert-manager.io/v1alpha1`). You can pin
+  # the version by specifying the `apiVersion` yourself.
   #
   # For example:
   #  config:
@@ -222,14 +237,14 @@ cert-manager:
   #      StableCertificateRequestName: true
   #      UseCertificateRequestBasicConstraints: true
   #      ValidateCAA: true
+  #    # Configure the metrics server for TLS
+  #    # See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
   #    metricsTLSConfig:
   #      dynamic:
   #        secretNamespace: "cert-manager"
   #        secretName: "cert-manager-metrics-ca"
   #        dnsNames:
   #        - cert-manager-metrics
-  #        - cert-manager-metrics.cert-manager
-  #        - cert-manager-metrics.cert-manager.svc
   config: {}
 
   # Setting Nameservers for DNS01 Self Check.
@@ -468,17 +483,24 @@ cert-manager:
   # +docs:section=Prometheus
 
   prometheus:
-    # Enable Prometheus monitoring for the cert-manager controller to use with the
-    # Prometheus Operator. If this option is enabled without enabling `prometheus.servicemonitor.enabled` or
-    # `prometheus.podmonitor.enabled`, 'prometheus.io' annotations are added to the cert-manager Deployment
-    # resources. Additionally, a service is created which can be used together
-    # with your own ServiceMonitor (managed outside of this Helm chart).
-    # Otherwise, a ServiceMonitor/ PodMonitor is created.
+    # Enable Prometheus monitoring for the cert-manager controller and webhook.
+    # If you use the Prometheus Operator, set prometheus.podmonitor.enabled or
+    # prometheus.servicemonitor.enabled, to create a PodMonitor or a
+    # ServiceMonitor resource.
+    # Otherwise, 'prometheus.io' annotations are added to the cert-manager and
+    # cert-manager-webhook Deployments.
+    # Note that you can not enable both PodMonitor and ServiceMonitor as they are
+    # mutually exclusive. Enabling both will result in a error.
     enabled: true
 
     servicemonitor:
       # Create a ServiceMonitor to add cert-manager to Prometheus.
       enabled: false
+
+      # The namespace that the service monitor should live in, defaults
+      # to the cert-manager namespace.
+      # +docs:property
+      # namespace: cert-manager
 
       # Specifies the `prometheus` label on the created ServiceMonitor. This is
       # used when different Prometheus instances have label selectors matching
@@ -526,6 +548,11 @@ cert-manager:
       # Create a PodMonitor to add cert-manager to Prometheus.
       enabled: false
 
+      # The namespace that the pod monitor should live in, defaults
+      # to the cert-manager namespace.
+      # +docs:property
+      # namespace: cert-manager
+
       # Specifies the `prometheus` label on the created PodMonitor. This is
       # used when different Prometheus instances have label selectors matching
       # different PodMonitors.
@@ -559,6 +586,15 @@ cert-manager:
       #     sourceLabels:
       #     - __meta_kubernetes_pod_node_name
       #     targetLabel: instance
+      #   # Configure the PodMonitor for TLS connections
+      #   # See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
+      #   scheme: https
+      #   tlsConfig:
+      #     serverName: cert-manager-metrics
+      #     ca:
+      #       secret:
+      #         name: cert-manager-metrics-ca
+      #         key: "tls.crt"
       #
       # +docs:property
       endpointAdditionalProperties: {}
@@ -592,8 +628,10 @@ cert-manager:
 
     # This is used to configure options for the webhook pod.
     # This allows setting options that would usually be provided using flags.
-    # An APIVersion and Kind must be specified in your values.yaml file.
-    # Flags override options that are set here.
+    #
+    # If `apiVersion` and `kind` are unspecified they default to the current latest
+    # version (currently `webhook.config.cert-manager.io/v1alpha1`). You can pin
+    # the version by specifying the `apiVersion` yourself.
     #
     # For example:
     #  apiVersion: webhook.config.cert-manager.io/v1alpha1
@@ -606,6 +644,14 @@ cert-manager:
     #  # This should be uncommented and set as a default by the chart once
     #  # the apiVersion of WebhookConfiguration graduates beyond v1alpha1.
     #  securePort: 10250
+    #  # Configure the metrics server for TLS
+    #  # See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
+    #  metricsTLSConfig:
+    #    dynamic:
+    #      secretNamespace: "cert-manager"
+    #      secretName: "cert-manager-metrics-ca"
+    #      dnsNames:
+    #      - cert-manager-metrics
     config: {}
 
     # The update strategy for the cert-manager webhook deployment.
@@ -943,8 +989,10 @@ cert-manager:
 
     # This is used to configure options for the cainjector pod.
     # It allows setting options that are usually provided via flags.
-    # An APIVersion and Kind must be specified in your values.yaml file.
-    # Flags override options that are set here.
+    #
+    # If `apiVersion` and `kind` are unspecified they default to the current latest
+    # version (currently `cainjector.config.cert-manager.io/v1alpha1`). You can pin
+    # the version by specifying the `apiVersion` yourself.
     #
     # For example:
     #  apiVersion: cainjector.config.cert-manager.io/v1alpha1
@@ -954,6 +1002,14 @@ cert-manager:
     #   format: text
     #  leaderElectionConfig:
     #   namespace: kube-system
+    #  # Configure the metrics server for TLS
+    #  # See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
+    #  metricsTLSConfig:
+    #    dynamic:
+    #      secretNamespace: "cert-manager"
+    #      secretName: "cert-manager-metrics-ca"
+    #      dnsNames:
+    #      - cert-manager-metrics
     config: {}
 
     # Deployment update strategy for the cert-manager cainjector deployment.
@@ -1013,6 +1069,10 @@ cert-manager:
     # Optional additional annotations to add to the cainjector Pods.
     # +docs:property
     # podAnnotations: {}
+
+    # Optional additional annotations to add to the cainjector metrics Service.
+    # +docs:property
+    # serviceAnnotations: {}
 
     # Additional command line flags to pass to cert-manager cainjector binary.
     # To see all available flags run `docker run quay.io/jetstack/cert-manager-cainjector:<version> --help`.
@@ -1083,6 +1143,9 @@ cert-manager:
 
     # Optional additional labels to add to the CA Injector Pods.
     podLabels: {}
+
+    # Optional additional labels to add to the CA Injector metrics Service.
+    serviceLabels: {}
 
     image:
       # The container registry to pull the cainjector image from.
@@ -1344,5 +1407,11 @@ cert-manager:
   #     apiVersion: v1
   #     kind: ConfigMap
   #     metadata:
-  #       name: '{{ template "cert-manager.name" . }}-extra-configmap'
+  #       name: '{{ template "cert-manager.fullname" . }}-extra-configmap'
   extraObjects: []
+
+  # Field used by our release pipeline to produce the static manifests.
+  # The field defaults to "helm" but is set to "static" when we render
+  # the static YAML manifests.
+  # +docs:hidden
+  creator: "helm"
