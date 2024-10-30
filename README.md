@@ -4,9 +4,7 @@
 
 ## Table of content
 
-- [Welcome to cert-manager](#welcome-to-cert-manager)
-  - [Table of content](#table-of-content)
-  - [Installation process](#installation-process)
+[[_TOC_]]
 
 ## Installation process
 
@@ -19,3 +17,16 @@ The installation should be done in two steps:
 #> make dry-run ENV=<ENV>
 #> make install ENV=<ENV>
 ```
+
+## Run Book
+
+### `SEC_ERROR_EXPIRED_CERTIFICATE` Certificate seen expired by browsers
+
+A browser might see, in some rare event a certificate as expired it will be triggering a `SEC_ERROR_EXPIRED_CERTIFICATE` error.
+In that scenario, the following action can be taken:
+
+- delete the `secret` related to the certificate, for example: `transmission-test-external-private-tls`
+- delete the `CertificateRequest` related to the certificate, for example: `transmission-external-private-tls-6s9tj`
+- This will have as an effect to force a new certificate validation.
+
+The root cause of it is most likely a glitch where a certificate is not rotated correctly by `cert manager`
