@@ -2,7 +2,7 @@
 
 [![GitLab Sync](https://img.shields.io/badge/gitlab_sync-cert_manager-blue?style=for-the-badge&logo=gitlab)](https://gitlab-internal.spirit-dev.net/github-mirror/helm-cert-manager) <!-- markdownlint-disable MD041 -->
 [![GitHub Mirror](https://img.shields.io/badge/github_mirror-cert_manager-blue?style=for-the-badge&logo=github)](https://github.com/spirit-dev/helm-cert-manager)
-[![App Status](https://argocd-internal.spirit-dev.net/api/badge?name=&revision=true&showAppName=true)](https://argocd-internal.spirit-dev.net/applications/)
+[![App Status](https://argocd-internal.spirit-dev.net/api/badge?name=cert-manager-turingpi&revision=true&showAppName=true)](https://argocd-internal.spirit-dev.net/applications/cert-manager-turingpi)
 
 <!--TOC-->
 
