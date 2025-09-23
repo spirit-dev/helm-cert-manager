@@ -1,0 +1,20 @@
+{{- $providerName := .Values.certManagerContext.provider.name }}
+{{- range $issuer := .Values.certManagerContext.issuer }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-{{ $issuer.env }}
+spec:
+  acme:
+    email: {{ $issuer.email }}
+    server: {{ $issuer.server }}
+    privateKeySecretRef:
+      name: letsencrypt-secret-{{ $issuer.env }}
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: {{ $providerName }}-token-secret
+              key: api-token
+{{- end }}
